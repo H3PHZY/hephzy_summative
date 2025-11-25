@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Registrations - CivicEvents+</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/navigation.js"></script>
+</head>
+<body class="bg-gray-50">
+    <script>
+        $(document).ready(function() {
+            if (!requireAuth()) return;
+            
+            loadNavigation();
+            loadFooter();
+            loadMyRegistrations();
+        });
+    </script>
+
+    <div class="min-h-screen">
+        <!-- Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">My Registrations</h1>
+                <p class="text-gray-600 mt-2">View and manage your event registrations</p>
+            </div>
+
+            <!-- Registrations List -->
+            <div id="registrations-list">
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadMyRegistrations() {
+            const container = $('#registrations-list');
+            
+            try {
+                const response = await apiRequest('/event-registrations/my-registrations');
+                if (response.status === 200 && response.data) {
+                    const registrations = response.data;
+                    
+                    if (registrations.length === 0) {
+                        container.html(`
+                            <div class="text-center py-12 bg-white rounded-lg shadow">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">No registrations</h3>
+                                <p class="mt-1 text-sm text-gray-500">You haven't registered for any events yet.</p>
+                                <a href="events.html" class="mt-4 inline-block text-blue-600 hover:text-blue-700">Browse Events</a>
+                            </div>
+                        `);
+                        return;
+                    }
+                    
+                    let html = '<div class="space-y-4">';
+                    registrations.forEach(reg => {
+                        const eventDate = reg.starts_at ? formatDate(reg.starts_at) : 'TBD';
+                        html += `
+                            <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                                    <div class="flex-1">
+                                        <h3 class="text-xl font-semibold text-gray-800 mb-2">${escapeHtml(reg.title || 'Event')}</h3>
+                                        <div class="space-y-1 text-sm text-gray-600">
+                                            ${reg.location ? `<p><strong>Location:</strong> ${escapeHtml(reg.location)}</p>` : ''}
+                                            ${reg.starts_at ? `<p><strong>Date:</strong> ${eventDate}</p>` : ''}
+                                            ${reg.ends_at ? `<p><strong>Ends:</strong> ${formatDate(reg.ends_at)}</p>` : ''}
+                                            <p><strong>Status:</strong> <span class="px-2 py-1 rounded ${reg.status === 'registered' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">${reg.status}</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 md:mt-0 md:ml-4 flex space-x-2">
+                                        <a href="event-detail.html?id=${reg.event_id}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                            View Event
+                                        </a>
+                                        ${reg.status === 'registered' ? `
+                                            <button onclick="cancelRegistration('${reg.event_id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                                Cancel
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    container.html(html);
+                }
+            } catch (error) {
+                console.error('Failed to load registrations:', error);
+                container.html(`
+                    <div class="text-center py-12 bg-white rounded-lg shadow">
+                        <p class="text-red-500">Failed to load registrations. Please try again later.</p>
+                    </div>
+                `);
+            }
+        }
+
+        async function cancelRegistration(eventId) {
+            if (!confirm('Are you sure you want to cancel your registration?')) return;
+            
+            try {
+                const response = await apiRequest('/event-registrations/cancel', {
+                    method: 'POST',
+                    body: JSON.stringify({ event_id: eventId }),
+                });
+                
+                if (response.status === 200) {
+                    showToast('Registration cancelled successfully', 'success');
+                    loadMyRegistrations();
+                }
+            } catch (error) {
+                showToast(error.message || 'Failed to cancel registration', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+

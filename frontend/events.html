@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - CivicEvents+</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/events.js"></script>
+</head>
+<body class="bg-gray-50">
+    <script>
+        $(document).ready(function() {
+            if (!requireAuth()) return;
+            
+            loadNavigation();
+            loadFooter();
+            
+            // Show admin create button if admin
+            if (isAdmin()) {
+                $('#admin-create-btn').html(`
+                    <a href="event-create.html" class="mt-4 md:mt-0 inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Create Event
+                    </a>
+                `);
+            }
+            
+            // Get search query from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const searchQuery = urlParams.get('search') || '';
+            
+            if (searchQuery) {
+                $('#search-input').val(searchQuery);
+            }
+            
+            loadEvents(searchQuery);
+        });
+    </script>
+
+    <div class="min-h-screen">
+        <!-- Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Events</h1>
+                    <p class="text-gray-600 mt-2">Discover and register for upcoming civic events</p>
+                </div>
+                <div id="admin-create-btn"></div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="bg-white rounded-lg shadow p-6 mb-8">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <input
+                            type="text"
+                            id="search-input"
+                            placeholder="Search events by title, description, or location..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onkeypress="if(event.key==='Enter') { const query = this.value; loadEvents(query); }"
+                        />
+                    </div>
+                    <button
+                        onclick="loadEvents($('#search-input').val())"
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+                    >
+                        Search
+                    </button>
+                </div>
+            </div>
+
+            <!-- Events List -->
+            <div id="events-list">
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Details - CivicEvents+</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/navigation.js"></script>
+</head>
+<body class="bg-gray-50">
+    <script>
+        $(document).ready(function() {
+            if (!requireAuth()) return;
+            
+            loadNavigation();
+            loadFooter();
+            
+            // Get notification ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const notificationId = urlParams.get('id');
+            
+            if (notificationId) {
+                loadNotificationDetail(notificationId);
+            } else {
+                $('#notification-detail').html('<div class="text-center py-12"><p class="text-red-500">Notification ID not provided</p><a href="dashboard.html" class="mt-4 inline-block text-blue-600">Back to Dashboard</a></div>');
+            }
+        });
+    </script>
+
+    <div class="min-h-screen">
+        <!-- Content -->
+        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div id="notification-detail">
+                <div class="text-center py-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        async function loadNotificationDetail(notificationId) {
+            const container = $('#notification-detail');
+            
+            try {
+                const response = await apiRequest(`/notifications/${notificationId}`);
+                if (response.status === 200 && response.data) {
+                    const notification = response.data;
+                    const isAdminUser = isAdmin();
+                    const metadata = notification.metadata || {};
+                    
+                    let html = `
+                        <div class="bg-white rounded-lg shadow-lg p-8">
+                            <div class="flex items-start justify-between mb-6">
+                                <div class="flex-1">
+                                    <h1 class="text-3xl font-bold text-gray-900 mb-2">${escapeHtml(notification.title)}</h1>
+                                    <p class="text-gray-600">${formatDate(notification.created_at)}</p>
+                                </div>
+                                ${isAdminUser ? `
+                                    <button onclick="deleteNotification('${notification.id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                                        Delete
+                                    </button>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="mb-6">
+                                <p class="text-gray-700 leading-relaxed">${escapeHtml(notification.message)}</p>
+                            </div>
+                            
+                            <div class="border-t border-gray-200 pt-6">
+                                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                    <span><strong>Type:</strong> ${escapeHtml(notification.type)}</span>
+                                    ${notification.recipient_id ? '<span><strong>Recipient:</strong> Specific user</span>' : '<span><strong>Recipient:</strong> All users</span>'}
+                                </div>
+                            </div>
+                            
+                            ${metadata.event_id ? `
+                                <div class="mt-6">
+                                    <a href="event-detail.html?id=${metadata.event_id}" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                        View Related Event
+                                    </a>
+                                </div>
+                            ` : ''}
+                            ${metadata.promo_id ? `
+                                <div class="mt-6">
+                                    <a href="promo-detail.html?id=${metadata.promo_id}" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                        View Related Promo
+                                    </a>
+                                </div>
+                            ` : ''}
+                            ${metadata.announcement_id ? `
+                                <div class="mt-6">
+                                    <a href="announcement-detail.html?id=${metadata.announcement_id}" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                        View Related Announcement
+                                    </a>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    container.html(html);
+                }
+            } catch (error) {
+                console.error('Failed to load notification:', error);
+                container.html(`
+                    <div class="text-center py-12">
+                        <p class="text-red-500">Failed to load notification. Please try again later.</p>
+                        <a href="dashboard.html" class="mt-4 inline-block text-blue-600 hover:text-blue-700">Back to Dashboard</a>
+                    </div>
+                `);
+            }
+        }
+
+        async function deleteNotification(notificationId) {
+            if (!confirm('Are you sure you want to delete this notification?')) return;
+            
+            try {
+                const response = await apiRequest(`/notifications/${notificationId}`, {
+                    method: 'DELETE',
+                });
+                
+                if (response.status === 200) {
+                    showToast('Notification deleted successfully', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                }
+            } catch (error) {
+                showToast(error.message || 'Failed to delete notification', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+
