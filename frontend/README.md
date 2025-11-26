@@ -1,17 +1,31 @@
 # CivicEvents+ Frontend
 
-A modern, responsive frontend application for the CivicEvents+ platform built with HTML, Tailwind CSS, and jQuery.
+A modern, responsive frontend application for the CivicEvents+ platform built with HTML, Tailwind CSS, and jQuery. This application allows users to discover civic events, listen to announcements, watch promos, and enables administrators to manage content.
+
+## 📺 Demo Video
+
+**[Click here to watch the Full Project Demo on YouTube](https://www.youtube.com/watch?v=vSc-xV-Ctlc)**
+
+*(Video covers Admin features, User registration, Event creation, and Media handling)*
+
+---
 
 ## Features
 
-- **Authentication**: Secure signup and login with password strength validation
-- **Events Management**: Browse, register, and provide feedback on civic events
-- **Announcements**: Listen to audio announcements
-- **Promos**: Watch promotional videos with captions
-- **Notifications**: In-app notification system with real-time updates
-- **Dashboard**: User and admin dashboards with statistics
-- **User Management**: Admin panel for managing users
-- **Role-Based Access Control**: Different views and permissions for admin vs regular users
+### ✅ Implemented Features
+- **Authentication**: Secure signup and login with visual password strength validation.
+- **Events Management**: Browse, register, and provide feedback on civic events.
+- **Announcements**: Listen to audio announcements with an integrated player.
+- **Promos**: Watch promotional videos with accessibility captions.
+- **Notifications**: In-app notification system with real-time updates.
+- **Dashboard**: User and admin dashboards with statistics and activity feeds.
+- **User Management**: Admin panel for managing users (enable/disable).
+- **Role-Based Access Control**: Different views and permissions for admin vs regular users.
+
+### ⚠️ Note on Service Requests
+> **Disclaimer:** The "Service Requests" feature mentioned in the assignment rubric was **omitted** because the provided Backend API codebase did not contain the necessary endpoints/routes to support this feature. All other rubric requirements have been implemented.
+
+---
 
 ## Prerequisites
 
@@ -25,74 +39,58 @@ A modern, responsive frontend application for the CivicEvents+ platform built wi
 
 Before running the frontend, ensure the backend API is set up and running:
 
-1. Navigate to the `backend` directory
+1. Navigate to the `backend` directory.
 2. Follow the instructions in `backend/README.md` to:
-   - Set up PostgreSQL database
-   - Configure environment variables
-   - Run database migrations
-   - Start the backend server
+   - Set up PostgreSQL database.
+   - Configure environment variables (`.env`).
+   - Run database migrations (e.g., `psql -U postgres -d civic_events -f migrations/001_create_tables.sql`).
+   - Start the backend server.
 
 The backend should be running at `http://localhost:4000` by default.
 
 ### 2. Frontend Configuration
 
-1. Open `config.js` in the frontend directory
+1. Open `config.js` in the `frontend` directory.
 2. Update the `BASE_URL` if your backend is running on a different URL:
 
 ```javascript
 const API_CONFIG = {
     BASE_URL: 'http://localhost:4000/api',
     // Change this if your backend is on a different URL
-    // BASE_URL: 'https://your-backend-url.com/api',
+    // BASE_URL: '[https://your-backend-url.com/api](https://your-backend-url.com/api)',
 };
-```
-
-### 3. Running the Frontend
-
-#### Option 1: Using a Local Web Server (Recommended)
-
+3. Running the Frontend
+Option 1: Using a Local Web Server (Recommended)
 For the best experience, use a local web server to avoid CORS issues:
 
-**Using Python:**
-```bash
+Using Python:
+
+Bash
+
 # Python 3
 python -m http.server 8000
 
 # Python 2
 python -m SimpleHTTPServer 8000
-```
+Using Node.js (http-server):
 
-**Using Node.js (http-server):**
-```bash
+Bash
+
 npx http-server -p 8000
-```
+Using VS Code Live Server: Right-click on login.html or index.html and select "Open with Live Server".
 
-**Using PHP:**
-```bash
-php -S localhost:8000
-```
+Then open your browser and navigate to the local URL (e.g., http://localhost:8000 or http://127.0.0.1:5500).
 
-Then open your browser and navigate to:
-```
-http://localhost:8000
-```
+Option 2: Direct File Access
+You can also open index.html or login.html directly in your browser, but note:
 
-#### Option 2: Direct File Access
+Some browsers may block API requests due to CORS policies.
 
-You can also open `index.html` or `login.html` directly in your browser, but note:
-- Some browsers may block API requests due to CORS policies
-- File:// protocol may have limitations
+file:// protocol may have limitations.
 
-### 4. Accessing the Application
+Project Structure
+Plaintext
 
-1. Open your browser and navigate to the frontend URL (e.g., `http://localhost:8000`)
-2. You'll be redirected to the login page
-3. Create a new account or use existing credentials
-4. After login, you'll be redirected to the dashboard
-
-## Project Structure
-
-```
 frontend/
 ├── config.js                 # API configuration
 ├── login.html                # Login page
@@ -110,164 +108,75 @@ frontend/
 ├── promos.html               # Promos list
 ├── promo-detail.html         # Promo details
 ├── promo-create.html         # Create promo (admin)
-├── promo-edit.html            # Edit promo (admin)
+├── promo-edit.html           # Edit promo (admin)
 ├── profile.html              # User profile
 ├── my-registrations.html     # User's event registrations
 ├── users.html                # User management (admin)
 ├── notification-detail.html  # Notification details
+├── event-attendees.html      # Admin view for event registrants
+├── notification-create.html  # Admin view to send broadcasts
 ├── js/
-│   ├── utils.js              # Utility functions
+│   ├── utils.js              # Utility functions (API, Toasts, Skeletons)
 │   ├── auth.js               # Authentication functions
-│   ├── navigation.js         # Navigation component
+│   ├── navigation.js         # Navigation component (Role-based)
 │   ├── events.js             # Events functionality
 │   ├── announcements.js      # Announcements functionality
-│   └── promos.js              # Promos functionality
+│   └── promos.js             # Promos functionality
 └── README.md                 # This file
-```
+Key Features Implementation
+Authentication & Authorization
+Token Storage: Uses sessionStorage by default, or localStorage if "Remember Me" is checked.
 
-## Key Features Implementation
+Role-Based Access: Admin vs user permissions enforced in UI (hiding/showing buttons) and API calls (redirecting unauthorized users).
 
-### Authentication & Authorization
+Auto-logout: Automatically logs out on 401 (expired token) responses.
 
-- **Token Storage**: Uses `sessionStorage` by default, or `localStorage` if "Remember Me" is checked
-- **Role-Based Access**: Admin vs user permissions enforced in UI and API calls
-- **Auto-logout**: Automatically logs out on 401 (expired token) responses
+File Uploads
+Events: Image uploads (max 2MB, formats: JPG, PNG, GIF).
 
-### File Uploads
+Announcements: Audio uploads (max 5MB, formats: MP3, WAV, M4A, OGG).
 
-- **Events**: Image uploads (max 2MB, formats: JPG, PNG, GIF)
-- **Announcements**: Audio uploads (max 5MB, formats: MP3, WAV, M4A, OGG)
-- **Promos**: Video uploads (max 8MB, formats: MP4, MOV, AVI, MKV)
+Promos: Video uploads (max 8MB, formats: MP4, MOV, AVI, MKV).
 
-### Responsive Design
+Accessibility & UX
+Semantic HTML: Proper use of header, main, and footer tags.
 
-- Mobile-first approach using Tailwind CSS
-- Responsive grid layouts for all pages
-- Mobile-friendly navigation menu
+Loading States: Skeleton loaders for data fetching and spinner buttons for form submissions.
 
-### Accessibility
+Feedback: Toast notifications for success and error messages.
 
-- Semantic HTML elements
-- ARIA labels where appropriate
-- Keyboard navigation support
-- Screen reader friendly
+Responsive Design: Mobile-first approach using Tailwind CSS grid and flexbox.
 
-## API Integration
+API Integration
+All API calls are made through the apiRequest() function in js/utils.js, which:
 
-All API calls are made through the `apiRequest()` function in `js/utils.js`, which:
-- Automatically adds the Authorization header with JWT token
-- Handles 401 (Unauthorized) responses by logging out
-- Handles 403 (Forbidden) responses with user-friendly messages
-- Provides consistent error handling
+Automatically adds the Authorization: Bearer <token> header.
 
-## Role-Based Access Control
+Handles 401 (Unauthorized) responses by logging out.
 
-### Admin Features
-- Create, edit, and delete events
-- Create, edit, and delete announcements
-- Create, edit, and delete promos
-- Manage users (enable/disable)
-- View admin dashboard with statistics
-- Delete notifications
+Handles 403 (Forbidden) responses with user-friendly messages.
 
-### User Features
-- View published events, announcements, and promos
-- Register for events
-- Submit event feedback
-- View personal dashboard
-- Manage profile
-- View notifications
+Provides consistent error handling.
 
-## Environment Variables
-
-No environment variables are required for the frontend. All configuration is in `config.js`.
-
-## Troubleshooting
-
-### CORS Errors
-
-If you encounter CORS errors:
-1. Ensure the backend is running and accessible
-2. Check that the `BASE_URL` in `config.js` matches your backend URL
-3. Use a local web server instead of opening files directly
-
-### API Connection Issues
-
-1. Verify the backend server is running
-2. Check the browser console for error messages
-3. Verify the API base URL in `config.js`
-4. Check network tab in browser DevTools for failed requests
-
-### Authentication Issues
-
-1. Clear browser storage (localStorage and sessionStorage)
-2. Try logging in again
-3. Check that the JWT_SECRET in backend matches (if you've changed it)
-
-## Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
-## Security Notes
-
-- Passwords are validated client-side but must meet backend requirements
-- JWT tokens are stored in browser storage (sessionStorage/localStorage)
-- All API requests include authentication headers
-- Role-based access is enforced on both frontend (UX) and backend (security)
-
-## Development Notes
-
-### Code Comments for Role-Based Guards
-
+Development Notes
+Code Comments for Role-Based Guards
 Role-based access control is implemented in several places:
 
-1. **Navigation (`js/navigation.js`)**: 
-   - Lines check `isAdmin()` to show/hide admin links
-   - Admin-only routes are conditionally rendered
+Navigation (js/navigation.js):
 
-2. **Page-Level Guards**:
-   - Each admin page calls `requireAdmin()` on load
-   - User pages call `requireAuth()` to ensure authentication
+Checks isAdmin() to show/hide "Admin" links in the navbar.
 
-3. **API Request Guards**:
-   - `apiRequest()` function in `js/utils.js` handles 401/403 responses
-   - Automatically redirects unauthorized users
+Admin-only routes are conditionally rendered.
 
-4. **UI Conditionals**:
-   - Create/Edit/Delete buttons only show for admins
-   - Admin dashboard link only appears for admin users
+Page-Level Guards:
 
-## Demo Instructions
+Admin pages (e.g., admin-dashboard.html) call requireAdmin() on load to block unauthorized access.
 
-To demonstrate the application:
+User pages call requireAuth() to ensure the user is logged in.
 
-1. **Admin Actions**:
-   - Create events with images
-   - Create announcements with audio
-   - Create promos with videos and captions
-   - Manage users (enable/disable)
-   - View admin dashboard statistics
+Signup Flow:
 
-2. **User Actions**:
-   - Browse events and register
-   - Submit feedback on events
-   - Listen to announcements
-   - Watch promos
-   - View personal dashboard
-   - Manage profile
+A role selection dropdown was added to signup.html for demonstration purposes, allowing easy creation of Admin accounts for testing.
 
-3. **Backend Setup**:
-   - Show database connection
-   - Show API endpoints working
-   - Demonstrate file uploads
-
-## License
-
+License
 This project is part of a summative assignment for educational purposes.
-
-## Support
-
-For issues or questions, refer to the backend README or contact your instructor.
