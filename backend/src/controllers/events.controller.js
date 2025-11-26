@@ -5,7 +5,10 @@ import * as Notifications from '../models/notifications.model.js';
 
 export const create = async (req, res, next) => {
     try {
-        const { title, description, location, starts_at, ends_at } = req.body;
+        const { title, description, location, starts_at, ends_at, published } = req.body;
+
+        // Convert published to boolean if it's a string (from FormData)
+        const isPublished = published === true || published === 'true' || published === '1';
 
         // Base event data
         const eventData = {
@@ -14,6 +17,7 @@ export const create = async (req, res, next) => {
             location,
             starts_at,
             ends_at,
+            published: isPublished,
             created_at: new Date(),
             updated_at: new Date(),
             metadata: {}
@@ -96,8 +100,14 @@ export const update = async (req, res, next) => {
         }
 
         // Prepare updated data
-        const { title, description, location, starts_at, ends_at } = req.body;
+        const { title, description, location, starts_at, ends_at, published } = req.body;
         const metadata = { ...existingEvent.metadata };
+
+        // Convert published to boolean if it's a string (from FormData)
+        let publishedValue = existingEvent.published;
+        if (published !== undefined) {
+            publishedValue = published === true || published === 'true' || published === '1';
+        }
 
         // Handle new image upload
         if (req.file) {
@@ -126,6 +136,7 @@ export const update = async (req, res, next) => {
             location: location ?? existingEvent.location,
             starts_at: starts_at ?? existingEvent.starts_at,
             ends_at: ends_at ?? existingEvent.ends_at,
+            published: publishedValue,
             metadata,
             updated_at: new Date(),
         };
@@ -168,4 +179,3 @@ export const remove = async (req, res, next) => {
         next(err);
     }
 };
-

@@ -97,7 +97,21 @@ async function apiRequest(endpoint, options = {}) {
 
     try {
         const response = await fetch(url, config);
-        const data = await response.json();
+        
+        // Try to parse JSON, but handle cases where response might not be JSON
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                console.error('Failed to parse JSON response:', parseError);
+                throw new Error('Invalid response from server');
+            }
+        } else {
+            const text = await response.text();
+            throw new Error(text || `HTTP error! status: ${response.status}`);
+        }
 
         // Handle 401 Unauthorized - token expired or invalid
         if (response.status === 401) {
@@ -115,6 +129,12 @@ async function apiRequest(endpoint, options = {}) {
         if (response.status === 403) {
             showToast('You do not have permission to perform this action.', 'error');
             throw new Error('Forbidden');
+        }
+
+        // Handle validation errors (400 status with errors array)
+        if (response.status === 400 && data.errors && Array.isArray(data.errors)) {
+            const errorMessages = data.errors.map(err => err.message || `${err.field}: ${err.message}`).join(', ');
+            throw new Error(errorMessages || data.message || 'Validation failed');
         }
 
         if (!response.ok) {
@@ -309,4 +329,3 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
-

@@ -18,6 +18,13 @@
             
             loadNavigation();
             loadFooter();
+            
+            // Bind form submit handler
+            $('#event-form').on('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                createEvent(e);
+            });
         });
     </script>
 
@@ -30,7 +37,7 @@
             </div>
 
             <div class="bg-white rounded-lg shadow-lg p-8">
-                <form id="event-form" onsubmit="createEvent(event)" enctype="multipart/form-data">
+                <form id="event-form" enctype="multipart/form-data">
                     <div class="space-y-6">
                         <!-- Title -->
                         <div>
@@ -171,9 +178,13 @@
         }
 
         async function createEvent(event) {
-            event.preventDefault();
+            // Prevent default form submission (already done in jQuery handler, but keep for safety)
+            if (event && event.preventDefault) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
             
-            const form = $(event.target);
+            const form = $('#event-form');
             const submitBtn = form.find('button[type="submit"]');
             const originalText = submitBtn.html();
             
@@ -182,6 +193,18 @@
             // Clear previous errors
             form.find('.error-message').remove();
             form.find('.border-red-500').removeClass('border-red-500');
+            
+            // Validate required fields
+            const title = $('#title').val().trim();
+            const location = $('#location').val().trim();
+            const startsAt = $('#starts_at').val();
+            const endsAt = $('#ends_at').val();
+            
+            if (!title || !location || !startsAt || !endsAt) {
+                showToast('Please fill in all required fields', 'error');
+                submitBtn.prop('disabled', false).html(originalText);
+                return;
+            }
             
             // Validate file size
             const imageInput = $('#image')[0];
@@ -194,13 +217,22 @@
                 }
             }
             
+            // Convert datetime-local to ISO format
+            const convertToISO = (datetimeLocal) => {
+                if (!datetimeLocal) return null;
+                // datetime-local format: "YYYY-MM-DDTHH:mm"
+                // Convert to ISO: "YYYY-MM-DDTHH:mm:ss.sssZ"
+                const date = new Date(datetimeLocal);
+                return date.toISOString();
+            };
+            
             // Create FormData
             const formData = new FormData();
-            formData.append('title', $('#title').val());
-            formData.append('description', $('#description').val());
-            formData.append('location', $('#location').val());
-            formData.append('starts_at', $('#starts_at').val());
-            formData.append('ends_at', $('#ends_at').val());
+            formData.append('title', title);
+            formData.append('description', $('#description').val().trim() || '');
+            formData.append('location', location);
+            formData.append('starts_at', convertToISO(startsAt));
+            formData.append('ends_at', convertToISO(endsAt));
             formData.append('published', $('#published').is(':checked'));
             
             if (imageInput.files.length > 0) {
@@ -208,25 +240,34 @@
             }
             
             try {
+                console.log('Submitting event form...');
                 const response = await apiRequest('/events', {
                     method: 'POST',
                     body: formData,
                 });
                 
-                if (response.status === 201) {
-                    showToast('Event created successfully!', 'success');
+                console.log('Response received:', response);
+                
+                if (response && (response.status === 201 || response.status === 200)) {
+                    showToast(response.message || 'Event created successfully!', 'success');
                     setTimeout(() => {
                         window.location.href = 'events.html';
-                    }, 1000);
+                    }, 1500);
+                } else {
+                    showToast(response?.message || 'Failed to create event', 'error');
+                    submitBtn.prop('disabled', false).html(originalText);
                 }
             } catch (error) {
                 console.error('Failed to create event:', error);
-                showToast(error.message || 'Failed to create event', 'error');
-            } finally {
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack
+                });
+                const errorMessage = error.message || 'Failed to create event. Please check all fields and try again.';
+                showToast(errorMessage, 'error');
                 submitBtn.prop('disabled', false).html(originalText);
             }
         }
     </script>
 </body>
 </html>
-
